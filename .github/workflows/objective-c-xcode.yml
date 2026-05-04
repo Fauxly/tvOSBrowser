@@ -19,7 +19,7 @@ jobs:
         run: |
           xcodebuild \
           -project _Project/Browser.xcodeproj \
-          -scheme YourScheme \
+          -scheme Browser \
           -destination 'generic/platform=tvOS' \
           -archivePath build/App.xcarchive \
           CODE_SIGNING_ALLOWED=NO \
