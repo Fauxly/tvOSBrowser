@@ -18,6 +18,7 @@ jobs:
       - name: Build archive (no signing)
         run: |
           xcodebuild \
+          -project _Project/Browser.xcodeproj \
           -scheme YourScheme \
           -destination 'generic/platform=tvOS' \
           -archivePath build/App.xcarchive \
