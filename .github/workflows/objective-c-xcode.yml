@@ -1,0 +1,38 @@
+name: Build tvOS (unsigned IPA)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build archive (no signing)
+        run: |
+          xcodebuild \
+          -scheme YourScheme \
+          -destination 'generic/platform=tvOS' \
+          -archivePath build/App.xcarchive \
+          CODE_SIGNING_ALLOWED=NO \
+          archive
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+          -archivePath build/App.xcarchive \
+          -exportPath build \
+          -exportOptionsPlist ExportOptions.plist
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v3
+        with:
+          name: unsigned-ipa
+          path: build/*.ipa
