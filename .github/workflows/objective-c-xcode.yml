@@ -1,9 +1,9 @@
-name: Build DEB
+name: Build tvOS DEB
 
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 permissions:
@@ -17,61 +17,82 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Show repository structure
+        run: ls -R
+
       - name: Install dependencies
         run: |
           brew install dpkg ldid
+
+      - name: List Xcode schemes
+        run: |
+          xcodebuild -list -project tvOSBrowser/tvOSBrowser.xcodeproj
 
       - name: Build tvOS app
         run: |
           xcodebuild \
             -project _Project/tvOSBrowser.xcodeproj \
-            -scheme Browser \
-            -configuration Release \
+            -scheme tvOSBrowser \
             -sdk appletvos \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
             build
 
-      - name: Create package structure
+      - name: Locate built app
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "tvOSBrowser.app" | head -n 1)
+
+          echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
+
+          echo "Found app:"
+          echo "$APP_PATH"
+
+      - name: Create DEB structure
         run: |
           mkdir -p package/Applications
           mkdir -p package/DEBIAN
 
-      - name: Copy app
+      - name: Copy app into package
         run: |
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "tvOSBrowser.app" | head -n 1)
           cp -R "$APP_PATH" package/Applications/
 
       - name: Create control file
         run: |
-          cat <<EOF > package/DEBIAN/control
+          cat > package/DEBIAN/control << EOF
           Package: com.fauxly.tvosbrowser
           Name: tvOSBrowser
           Version: 1.0
           Architecture: iphoneos-arm
-          Description: Web browser for tvOS
+          Description: tvOS web browser for Apple TV
           Maintainer: Fauxly
           Author: Fauxly
           Section: Applications
           Depends: firmware (>= 13.0)
           EOF
 
-      - name: Sign app
+      - name: Sign binaries
         run: |
-          find package/Applications/tvOSBrowser.app -type f -perm +111 -exec ldid -S {} \; || true
+          find package/Applications -type f -perm +111 -exec ldid -S {} \; || true
 
       - name: Build DEB package
         run: |
           dpkg-deb -b package tvOSBrowser.deb
 
-      - name: Upload artifact
+      - name: Verify package
+        run: |
+          ls -lah
+          file tvOSBrowser.deb
+
+      - name: Upload DEB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tvOSBrowser-deb
+          name: tvOSBrowser-DEB
           path: tvOSBrowser.deb
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: tvOSBrowser.deb
           tag_name: v1.${{ github.run_number }}
+          files: tvOSBrowser.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
