@@ -1,8 +1,9 @@
-name: build tvOS Browser
+name: Build DEB
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -10,82 +11,67 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-15
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
+      - name: Install dependencies
+        run: |
+          brew install dpkg ldid
 
-      - name: Show Xcode version
-        run: xcodebuild -version
-
-      # 🔧 Сборка архива
-      - name: Build archive
+      - name: Build tvOS app
         run: |
           xcodebuild \
-          -project _Project/Browser.xcodeproj \
-          -scheme Browser \
-          -destination 'generic/platform=tvOS' \
-          CODE_SIGNING_ALLOWED=NO \
-          CODE_SIGNING_REQUIRED=NO \
-          archive \
-          -archivePath build/App.xcarchive
+            -project tvOSBrowser.xcodeproj \
+            -scheme tvOSBrowser \
+            -configuration Release \
+            -sdk appletvos \
+            build
 
-      # 📦 Делаем IPA вручную (правильная структура!)
-      - name: Create unsigned IPA
+      - name: Create package structure
         run: |
-          mkdir Payload
-          cp -r build/App.xcarchive/Products/Applications/*.app Payload/
-          zip -r Browser.ipa Payload
+          mkdir -p package/Applications
+          mkdir -p package/DEBIAN
 
-      # 📤 Загружаем IPA
-      - name: Upload IPA
+      - name: Copy app
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "tvOSBrowser.app" | head -n 1)
+          cp -R "$APP_PATH" package/Applications/
+
+      - name: Create control file
+        run: |
+          cat <<EOF > package/DEBIAN/control
+          Package: com.fauxly.tvosbrowser
+          Name: tvOSBrowser
+          Version: 1.0
+          Architecture: iphoneos-arm
+          Description: Web browser for tvOS
+          Maintainer: Fauxly
+          Author: Fauxly
+          Section: Applications
+          Depends: firmware (>= 13.0)
+          EOF
+
+      - name: Sign app
+        run: |
+          find package/Applications/tvOSBrowser.app -type f -perm +111 -exec ldid -S {} \; || true
+
+      - name: Build DEB package
+        run: |
+          dpkg-deb -b package tvOSBrowser.deb
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: browser-ipa
-          path: Browser.ipa
+          name: tvOSBrowser-deb
+          path: tvOSBrowser.deb
 
-      # 📤 Загружаем архив (на всякий случай)
-      - name: Upload archive
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: archive
-          path: build/App.xcarchive
-
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download IPA
-        uses: actions/download-artifact@v4
-        with:
-          name: browser-ipa
-          path: build/
-
-      - name: Create tag
-        run: |
-          TAG="tvos_$(date +'%Y%m%d%H%M%S')"
-          echo "TAG=$TAG" >> $GITHUB_ENV
-
-      - name: Create release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ env.TAG }}
-          name: tvOS build (${{ env.TAG }})
-          prerelease: true
-          files: build/Browser.ipa
+          files: tvOSBrowser.deb
+          tag_name: v1.${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
