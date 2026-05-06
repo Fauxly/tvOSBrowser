@@ -26,12 +26,12 @@ jobs:
 
       - name: List Xcode schemes
         run: |
-          xcodebuild -list -project _Project/tvOSBrowser.xcodeproj
+          xcodebuild -list -project _Project/Browser.xcodeproj
 
       - name: Build tvOS app
         run: |
           xcodebuild \
-            -project _Project/tvOSBrowser.xcodeproj \
+            -project _Project/Browser.xcodeproj \
             -scheme Browser \
             -sdk appletvos \
             -configuration Release \
