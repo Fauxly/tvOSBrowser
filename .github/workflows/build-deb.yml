@@ -17,14 +17,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show repository structure
-        run: ls -R
-
       - name: Install dependencies
         run: |
           brew install dpkg ldid
 
-      - name: List Xcode schemes
+      - name: List schemes
         run: |
           xcodebuild -list -project _Project/Browser.xcodeproj
 
@@ -49,23 +46,23 @@ jobs:
           echo "Found app:"
           echo "$APP_PATH"
 
-      - name: Create DEB structure
+      - name: Create package structure
         run: |
           mkdir -p package/Applications
           mkdir -p package/DEBIAN
 
-      - name: Copy app into package
+      - name: Copy app
         run: |
           cp -R "$APP_PATH" package/Applications/
 
       - name: Create control file
         run: |
           cat > package/DEBIAN/control << EOF
-          Package: com.fauxly.tvosbrowser
-          Name: tvOSBrowser
+          Package: com.fauxly.browser
+          Name: Browser
           Version: 1.0
           Architecture: iphoneos-arm
-          Description: tvOS web browser for Apple TV
+          Description: tvOS browser for Apple TV
           Maintainer: Fauxly
           Author: Fauxly
           Section: Applications
@@ -78,23 +75,17 @@ jobs:
 
       - name: Build DEB package
         run: |
-          dpkg-deb -b package tvOSBrowser.deb
+          dpkg-deb -b package Browser.deb
 
       - name: Verify package
         run: |
           ls -lah
-          file tvOSBrowser.deb
-
-      - name: Upload DEB artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tvOSBrowser-DEB
-          path: tvOSBrowser.deb
+          file Browser.deb
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.${{ github.run_number }}
-          files: tvOSBrowser.deb
+          files: Browser.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
