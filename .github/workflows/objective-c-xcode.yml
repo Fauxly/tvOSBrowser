@@ -24,8 +24,8 @@ jobs:
       - name: Build tvOS app
         run: |
           xcodebuild \
-            -project tvOSBrowser.xcodeproj \
-            -scheme tvOSBrowser \
+            -project _Project/tvOSBrowser.xcodeproj \
+            -scheme Browser \
             -configuration Release \
             -sdk appletvos \
             build
