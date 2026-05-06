@@ -26,7 +26,7 @@ jobs:
 
       - name: List Xcode schemes
         run: |
-          xcodebuild -list -project tvOSBrowser/tvOSBrowser.xcodeproj
+          xcodebuild -list -project _Project/tvOSBrowser.xcodeproj
 
       - name: Build tvOS app
         run: |
