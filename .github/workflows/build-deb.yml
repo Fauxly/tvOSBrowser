@@ -40,7 +40,9 @@ jobs:
 
       - name: Locate built app
         run: |
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "tvOSBrowser.app" | head -n 1)
+          find ~/Library/Developer/Xcode/DerivedData -name "*.app"
+
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" | head -n 1)
 
           echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
 
