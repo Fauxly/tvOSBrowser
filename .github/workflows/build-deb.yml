@@ -32,7 +32,7 @@ jobs:
         run: |
           xcodebuild \
             -project _Project/tvOSBrowser.xcodeproj \
-            -scheme tvOSBrowser \
+            -scheme Browser \
             -sdk appletvos \
             -configuration Release \
             CODE_SIGNING_ALLOWED=NO \
