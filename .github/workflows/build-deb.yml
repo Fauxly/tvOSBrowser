@@ -1,122 +1,45 @@
-name: Build tvOS Repository
+name: Build tvOS Rootless
 
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
-
-permissions:
-  contents: write
+  push:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install Theos
         run: |
-          brew install dpkg ldid
+          git clone --recursive https://github.com/theos/theos.git $HOME/theos
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
 
-      - name: List Xcode schemes
-        run: |
-          xcodebuild -list -project _Project/Browser.xcodeproj
-
-      - name: Build tvOS app
+      - name: Build App
         run: |
           xcodebuild \
-            -project _Project/Browser.xcodeproj \
+            -project _Browser/Browser.xcodeproj \
             -scheme Browser \
             -sdk appletvos \
             -configuration Release \
-            CODE_SIGNING_ALLOWED=NO \
-            build
+            CODE_SIGNING_ALLOWED=NO
 
-      - name: Locate built app
+      - name: Prepare layout
         run: |
-          find ~/Library/Developer/Xcode/DerivedData -name "*.app"
+          mkdir -p layout/var/jb/Applications
 
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" | head -n 1)
+          APP=$(find ~/Library/Developer/Xcode/DerivedData -name "Browser.app" | head -n 1)
 
-          echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
+          cp -R "$APP" layout/var/jb/Applications/
 
-          echo "Found app:"
-          echo "$APP_PATH"
-
-      - name: Create package structure
+      - name: Build DEB
         run: |
-          mkdir -p package/Applications
-          mkdir -p package/DEBIAN
+          make package
 
-      - name: Copy app into package
-        run: |
-          cp -R "$APP_PATH" package/Applications/
-
-      - name: Create control file
-        run: |
-          cat > package/DEBIAN/control << EOF
-          Package: com.fauxly.browser
-          Name: Browser
-          Version: 1.0
-          Architecture: appletvos-arm64
-          Description: Browser for Apple tvOS
-          Maintainer: Fauxly
-          Author: Fauxly
-          Section: Applications
-          Depends: firmware (>= 13.0)
-          EOF
-
-      - name: Sign binaries
-        run: |
-          find package/Applications -type f -perm +111 -exec ldid -S {} \; || true
-
-      - name: Build DEB package
-        run: |
-          dpkg-deb -b package com.fauxly.browser_1.0_appletvos-arm64.deb
-
-      - name: Create repository structure
-        run: |
-          mkdir -p repo/debs
-
-          cp com.fauxly.browser_1.0_appletvos-arm64.deb repo/debs/
-
-      - name: Generate Packages
-        run: |
-          dpkg-scanpackages repo/debs /dev/null > repo/Packages
-
-      - name: Generate Packages.gz
-        run: |
-          gzip -kf repo/Packages
-
-      - name: Generate Release file
-        run: |
-          cat > repo/Release << EOF
-          Origin: Fauxly Repo
-          Label: Fauxly Repo
-          Suite: stable
-          Version: 1.0
-          Codename: tvos
-          Architectures: darwin-arm64, appletvos-arm64
-          Components: main
-          Description: Apple TV jailbreak repository
-          EOF
-
-      - name: Verify repository files
-        run: |
-          ls -lah repo
-          ls -lah repo/debs
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: v1.${{ github.run_number }}
-          files: |
-            com.fauxly.browser_1.0_appletvos-arm64.deb
-            repo/Packages
-            repo/Packages.gz
-            repo/Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: tvOSBrowser-rootless
+          path: packages/*.deb
