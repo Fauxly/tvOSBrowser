@@ -20,7 +20,7 @@ jobs:
       - name: Build App
         run: |
           xcodebuild \
-            -project _Browser/Browser.xcodeproj \
+            -project _Project/Browser.xcodeproj \
             -scheme Browser \
             -sdk appletvos \
             -configuration Release \
