@@ -1,0 +1,9 @@
+Package: com.fauxly.browser
+Name: Browser
+Version: 1.0
+Architecture: iphoneos-arm64
+Description: Browser for tvOS
+Maintainer: Fauxly
+Author: Fauxly
+Section: Applications
+Depends: firmware (>= 15.0)
