@@ -44,6 +44,7 @@ static CGFloat const kTopBarUniformFocusHeight = 72.0;
 @property (nonatomic) UIImageView *forwardImageView;
 @property (nonatomic) UIImageView *homeImageView;
 @property (nonatomic) UIImageView *tabsImageView;
+@property (nonatomic) UIImageView *downloadsImageView;
 @property (nonatomic) UIImageView *fullscreenImageView;
 @property (nonatomic) UIImageView *menuImageView;
 @property (nonatomic) UILabel *URLLabel;
@@ -56,6 +57,7 @@ static CGFloat const kTopBarUniformFocusHeight = 72.0;
 @property (nonatomic) BrowserTopBarFocusButton *forwardFocusButton;
 @property (nonatomic) BrowserTopBarFocusButton *homeFocusButton;
 @property (nonatomic) BrowserTopBarFocusButton *tabsFocusButton;
+@property (nonatomic) BrowserTopBarFocusButton *downloadsFocusButton;
 @property (nonatomic) BrowserTopBarFocusButton *URLFocusButton;
 @property (nonatomic) BrowserTopBarFocusButton *fullscreenFocusButton;
 @property (nonatomic) BrowserTopBarFocusButton *menuFocusButton;
@@ -132,6 +134,7 @@ static CGFloat const kTopBarUniformFocusHeight = 72.0;
     _forwardImageView = [self newIconViewNamed:@"right-arrow-forward"];
     _homeImageView = [self newIconViewNamed:@"house-outline"];
     _tabsImageView = [self newIconViewNamed:@"multi-tab"];
+    _downloadsImageView = [self newIconViewNamed:@"download-arrow"];
     _fullscreenImageView = [self newIconViewNamed:@"resize-arrows"];
     _menuImageView = [self newIconViewNamed:@"menu-2"];
 
@@ -156,6 +159,7 @@ static CGFloat const kTopBarUniformFocusHeight = 72.0;
         _forwardImageView,
         _homeImageView,
         _tabsImageView,
+        _downloadsImageView,
         _fullscreenImageView,
         _menuImageView
     ];
@@ -168,6 +172,9 @@ static CGFloat const kTopBarUniformFocusHeight = 72.0;
     _forwardFocusButton = [self newFocusButtonForAction:BrowserTopBarActionForward accessibilityLabel:@"Forward"];
     _homeFocusButton = [self newFocusButtonForAction:BrowserTopBarActionHome accessibilityLabel:@"Home"];
     _tabsFocusButton = [self newFocusButtonForAction:BrowserTopBarActionTabs accessibilityLabel:@"Tabs"];
+    _downloadsFocusButton =
+        [self newFocusButtonForAction:BrowserTopBarActionDownloads
+                   accessibilityLabel:@"Downloads"];
     _URLFocusButton = [self newFocusButtonForAction:BrowserTopBarActionURL accessibilityLabel:@"Enter URL or Search"];
     _fullscreenFocusButton = [self newFocusButtonForAction:BrowserTopBarActionFullscreen accessibilityLabel:@"Top Navigation Visibility"];
     _menuFocusButton = [self newFocusButtonForAction:BrowserTopBarActionMenu accessibilityLabel:@"Menu"];
@@ -177,6 +184,7 @@ static CGFloat const kTopBarUniformFocusHeight = 72.0;
         _forwardFocusButton,
         _homeFocusButton,
         _tabsFocusButton,
+        _downloadsFocusButton,
         _URLFocusButton,
         _fullscreenFocusButton,
         _menuFocusButton
@@ -264,7 +272,8 @@ static CGFloat const kTopBarUniformFocusHeight = 72.0;
         self.refreshImageView,
         self.forwardImageView,
         self.homeImageView,
-        self.tabsImageView
+        self.tabsImageView,
+        self.downloadsImageView
     ];
     for (UIImageView *imageView in leftIcons) {
         imageView.frame = CGRectMake(leftX, iconY, kTopBarIconSize, kTopBarIconSize);
@@ -284,7 +293,7 @@ static CGFloat const kTopBarUniformFocusHeight = 72.0;
                                            spinnerSide,
                                            spinnerSide);
 
-    CGFloat labelOriginX = CGRectGetMaxX(self.tabsImageView.frame) + kTopBarLabelSpacing;
+    CGFloat labelOriginX = CGRectGetMaxX(self.downloadsImageView.frame) + kTopBarLabelSpacing;
     CGFloat labelTrailingX = CGRectGetMinX(self.loadingSpinner.frame) - kTopBarLabelSpacing;
     CGFloat labelWidth = MAX(200.0, labelTrailingX - labelOriginX);
     self.URLLabel.frame = CGRectMake(labelOriginX,
@@ -297,6 +306,8 @@ static CGFloat const kTopBarUniformFocusHeight = 72.0;
     self.forwardFocusButton.frame = [self focusFrameForIconView:self.forwardImageView];
     self.homeFocusButton.frame = [self focusFrameForIconView:self.homeImageView];
     self.tabsFocusButton.frame = [self focusFrameForIconView:self.tabsImageView];
+    self.downloadsFocusButton.frame =
+        [self focusFrameForIconView:self.downloadsImageView];
     self.URLFocusButton.frame = [self focusFrameForLabel:self.URLLabel];
     self.fullscreenFocusButton.frame = [self focusFrameForIconView:self.fullscreenImageView];
     self.menuFocusButton.frame = [self focusFrameForMenuIconView:self.menuImageView];

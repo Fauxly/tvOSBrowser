@@ -8,6 +8,7 @@ typedef NS_ENUM(NSInteger, BrowserTopBarAction) {
     BrowserTopBarActionForward,
     BrowserTopBarActionHome,
     BrowserTopBarActionTabs,
+    BrowserTopBarActionDownloads,
     BrowserTopBarActionURL,
     BrowserTopBarActionFullscreen,
     BrowserTopBarActionMenu
@@ -29,6 +30,7 @@ typedef NS_ENUM(NSInteger, BrowserTopBarAction) {
 @property (nonatomic, readonly) UIImageView *forwardImageView;
 @property (nonatomic, readonly) UIImageView *homeImageView;
 @property (nonatomic, readonly) UIImageView *tabsImageView;
+@property (nonatomic, readonly) UIImageView *downloadsImageView;
 @property (nonatomic, readonly) UIImageView *fullscreenImageView;
 @property (nonatomic, readonly) UIImageView *menuImageView;
 @property (nonatomic, readonly) UILabel *URLLabel;

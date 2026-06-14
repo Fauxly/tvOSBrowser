@@ -18,6 +18,7 @@
 #import "BrowserTabOverviewController.h"
 #import "BrowserVideoPlaybackCoordinator.h"
 #import "BrowserViewModel.h"
+#import "DownloadsViewController.h"
 #import "ViewController.h"
 
 static NSString * const kBrowserGlobalSelectPressEndedNotification = @"BrowserGlobalSelectPressEndedNotification";
@@ -189,7 +190,7 @@ static UIColor *kTextColor(void) {
                 return;
             }
 
-            NSString *downloadsPath = @"/var/mobile/Media/Downloads";
+            NSString *downloadsPath = @"/var/mobile/Documents";
             NSFileManager *fileManager = [NSFileManager defaultManager];
             
             if (![fileManager fileExistsAtPath:downloadsPath]) {
@@ -207,7 +208,7 @@ static UIColor *kTextColor(void) {
             if ([fileManager moveItemAtURL:location toURL:destinationURL error:nil]) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Загрузка"
-                                                                                   message:[NSString stringWithFormat:@"Файл %@ скачан в Media/Downloads", fileName]
+                                                                                   message:[NSString stringWithFormat:@"Файл %@ скачан в /Documents", fileName]
                                                                             preferredStyle:UIAlertControllerStyleAlert];
                     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
                     [self presentViewController:alert animated:YES completion:nil];
@@ -279,6 +280,21 @@ static UIColor *kTextColor(void) {
         case BrowserTopBarActionTabs:
             [self browserShowTabOverview];
             break;
+        case BrowserTopBarActionDownloads:
+        {
+            DownloadsViewController *downloadsVC =
+                [[DownloadsViewController alloc]
+                 initWithStyle:UITableViewStylePlain];
+
+            UINavigationController *nav =
+                [[UINavigationController alloc]
+                 initWithRootViewController:downloadsVC];
+
+            [self presentViewController:nav
+                               animated:YES
+                             completion:nil];
+        }
+        break;
         case BrowserTopBarActionURL:
             [self showInputURLorSearchGoogle];
             break;
@@ -767,7 +783,48 @@ static UIColor *kTextColor(void) {
     // 1. Наш перехват файлов и .deb пакетов для palera1n
     NSURL *url = request.URL;
     NSString *extension = [url pathExtension].lowercaseString;
-    NSArray *downloadableTypes = @[@"deb", @"zip", @"mp4", @"ipa", @"gz", @"tar"];
+    NSString *absoluteURL = url.absoluteString.lowercaseString;
+
+    if ([absoluteURL containsString:@"download"] ||
+        [absoluteURL containsString:@"attachment"] ||
+        [absoluteURL containsString:@"getfile"] ||
+        [absoluteURL containsString:@"file="] ||
+        [absoluteURL containsString:@"dl="])
+    {
+        NSLog(@"DOWNLOAD DETECTED: %@", absoluteURL);
+        [self downloadFileFromURL:url];
+        return NO;
+    }
+    NSArray *downloadableTypes = @[
+        @"deb",
+        @"ipa",
+        @"zip",
+        @"7z",
+        @"rar",
+        @"gz",
+        @"tar",
+        @"xz",
+
+        @"mp4",
+        @"mkv",
+        @"avi",
+        @"mov",
+        @"m4v",
+
+        @"mp3",
+        @"aac",
+        @"flac",
+        @"wav",
+
+        @"pdf",
+        @"txt",
+        @"json",
+        @"xml",
+
+        @"apk",
+        @"img",
+        @"iso"
+    ];
 
     if ([downloadableTypes containsObject:extension]) {
         [self downloadFileFromURL:url];
